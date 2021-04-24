@@ -2,6 +2,9 @@ requires 'perl', 'v5.16';
 
 requires 'List::Util';
 
+requires   'Text::CSV';
+recommends 'Text::CSV_XS';
+
 on test => sub {
 	requires 'Test2::V0';
 };

@@ -7,6 +7,7 @@ use open qw(:std :encoding(UTF-8));    # undeclared streams in UTF-8
 
 use Carp;
 use List::Util qw< first >;
+use Text::CSV qw< csv >;
 
 # ABSTRACT: Convert Frequency List files between formats
 # VERSION
@@ -59,6 +60,39 @@ sub external_header {
     croak "No external header mapping for '$name'";
 }
 
+sub read {
+    my $self = shift;
+    my $file = shift;
+    croak "Usage: read($file)" if @_;
+
+    my $read = csv(
+        {   in      => $file,
+            headers => sub { $self->internal_header($_) },
+        }
+    );
+
+    my $i = 0;
+    my @list;
+    foreach my $item ( @{$read} ) {
+        my $id = delete $item->{id} || $i + 1;
+        $i = $id;
+
+        # Don't store empty rows
+        next unless first {length} values %{$item};
+
+        foreach my $name ( keys %{$item} ) {
+            if ( my $filter = $self->filter_for( in => $name ) ) {
+                local $_ = $item->{$name};
+                $item->{$name} = $filter->($item);
+            }
+        }
+
+        $list[ $i - 1 ] = $item;
+    }
+
+    return \@list;
+}
+
 sub column_defs {
     my @defs = map { { name => $_ } } qw<
         id
@@ -84,6 +118,16 @@ sub column_defs {
     };
 
     return @defs;
+}
+
+sub filter_for {
+    my ( $self, $direction, $name ) = @_;
+
+    return $self->{_filter}->{$direction}->{$name} //= do {
+        my $def = first { $self->internal_header( $_->{name} ) eq $name }
+            $self->column_defs;
+        $def ? $def->{$direction} : "";
+    };
 }
 
 1;
@@ -113,6 +157,15 @@ ease that pain.
         ...,
     );
 
+=head2 read
+
+    my @list = @{ Ham::Convert::FreqencyList->new->read($file) };
+
+Reads an arrayref of frequencies from a valid argument to
+C<Text::CSV/in>.
+The frequencies returned are a list of hashrefs or undef,
+the hashrefs are keyed off the L</internal_header> name.
+
 =head2 headers
 
 Returns a list of the header names for the columns in the current format.
@@ -140,6 +193,9 @@ Now C<$defs> could look like:
         },
         ...,
     ];
+
+The C<in> filter is used by L</read> to convert to the internal
+conversion format.
 
 =head2 internal_header
 
@@ -178,6 +234,13 @@ If the L</internal_name> has been calculated,
 looks up the external name from the cache.
 Otherwise throws an exception.
 
+=head2 filter_for
+
+    my $filter = $converter->filter_for( in => $internal_header );
+
+Returns a filter, or C<undef> if none exists, for the column, looked
+up in L</column_defs>.
+
 =head1 BUGS AND LIMITATIONS
 
 Likely a lot.
@@ -185,6 +248,8 @@ Likely a lot.
 =head1 DEPENDENCIES
 
 Perl 5.16 or higher.
+
+L<Text::CSV>.
 
 =head1 SEE ALSO
 

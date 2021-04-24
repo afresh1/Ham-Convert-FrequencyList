@@ -67,4 +67,42 @@ subtest 'header map' => sub {
         "Looking up two headers that map to the same internal header dies";
 };
 
+is $converter->read( \*DATA ), [
+    {   'bar'     => 'B',
+        'comment' => 'Repeater comment, with a comma',
+        'ctcss'   => '167.9',
+        'dtcsc'   => '023',
+        'dtcsp'   => 'NN',
+        'foo'     => 'A',
+        'tx_freq' => '440.300000',
+        'rx_freq' => '5.000000',
+        'duplex'  => '+',
+        'groups'  => [ 1, 1, '', 1 ],
+        'mode'    => 'FM',
+        'name'    => 'KC7MZM',
+    },
+    undef, undef, undef, undef, undef, undef, undef,
+    {   'bar'     => 'Y',
+        'comment' => 'Sample repeater in Portland',
+        'ctcss'   => '',
+        'dtcsc'   => '023',
+        'dtcsp'   => 'NN',
+        'foo'     => 'X',
+        'tx_freq' => '145.230000',
+        'rx_freq' => '0.600000',
+        'duplex'  => '-',
+        'groups'  => [ '', '', 1, '', 1 ],
+        'mode'    => 'FM',
+        'name'    => 'K7LJ',
+    },
+], "Parsed the data into the expected format";
+
 done_testing;
+__DATA__
+id,tx_freq,rx_freq,duplex,ctcss,dtcsc,dtcsp,mode,name,comment,groups,foo,bar
+1,440.300000,5.000000,+,167.9,023,NN,FM,KC7MZM,"Repeater comment, with a comma",1:1::1,A,B
+3,,,,,,,,0,,
+5,,,,,,,,,,,
+9,145.230000,0.600000,-,,023,NN,FM,K7LJ,Sample repeater in Portland,::1::1,X,Y
+11,
+12,,,,,,
