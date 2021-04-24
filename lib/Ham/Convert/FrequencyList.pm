@@ -6,6 +6,7 @@ use warnings qw(FATAL utf8);           # fatalize encoding glitches
 use open qw(:std :encoding(UTF-8));    # undeclared streams in UTF-8
 
 use Carp;
+use List::Util qw< first >;
 
 # ABSTRACT: Convert Frequency List files between formats
 # VERSION
@@ -20,8 +21,29 @@ sub headers {
     return map { $_->{name} } $self->column_defs;
 }
 
+sub internal_header {
+    my ( $self, $name ) = @_;
+
+    return $self->{_header}->{internal}->{$name}
+        if exists $self->{_header}->{internal}->{$name};
+
+    my $def = first { $_->{name} eq $name } $self->column_defs,
+        { name => $name };
+
+    $self->{_header}->{internal}->{$name} = $def->{internal} ||= do {
+        local $_ = $name;
+        s/transmit/tx/ig;
+        s/receive/rx/ig;
+        s/frequency/freq/ig;
+        s/\W+/_/g;
+        lc;
+    };
+
+    return $def->{internal};
+}
+
 sub column_defs {
-    my @defs = map { { name => $_, internal => $_ } } qw<
+    my @defs = map { { name => $_ } } qw<
         id
 
         tx_freq
@@ -39,10 +61,9 @@ sub column_defs {
     >;
 
     push @defs, {
-        name     => 'groups',
-        internal => 'groups',
-        in       => sub { [ split /\s*:\s*/, $_ // '' ] },
-        out      => sub { join ':', @{ $_ || [] } },
+        name => 'groups',
+        in   => sub { [ split /\s*:\s*/, $_ // '' ] },
+        out  => sub { join ':', @{ $_ || [] } },
     };
 
     return @defs;
@@ -92,19 +113,43 @@ the file.
 
 Now C<$defs> could look like:
 
-    [   {   name     => 'rx_freq',
-            internal => 'rx_freq',
-            in       => sub {...},
-            out      => sub {...},
+    [   {   name     => 'Number',
+            internal => 'id',
         },
-        {   name     => 'tx_freq',
-            internal => 'tx_freq',
+        {   name     => 'Frequency' },
+        {   name     => 'group',
             in       => sub {...},
             out      => sub {...},
         },
         ...,
     ];
 
+=head2 internal_header
+
+    my $internal_name = $converter->internal_header( $external_name );
+
+Looks up the internal header name from the format specific name.
+
+Does this normally by checking the L</column_defs> for a matching C<name>
+and returning the C<internal> version if it exists.
+Otherwise does some basic conversions to make the headers more
+friendly to use in perl.
+
+Currently the conversions are:
+
+=over
+
+=item Convert to lowercase.
+
+=item transmit -> tx
+
+=item receive -> rx
+
+=item frequency -> freq
+
+=item Replace non-word characters to underscores.
+
+=back
 
 =head1 BUGS AND LIMITATIONS
 

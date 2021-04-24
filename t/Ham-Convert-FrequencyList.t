@@ -1,5 +1,6 @@
-use Test2::V0 -target => 'Ham::Convert::FrequencyList',
-    qw< ok is diag done_testing >;
+use Test2::V0
+    -target => 'Ham::Convert::FrequencyList',
+    qw< ok is subtest diag done_testing >;
 
 diag "Testing $CLASS on perl $^V";
 
@@ -25,5 +26,28 @@ is [ $converter->headers ], [ qw<
 
     groups
 > ];
+
+subtest 'internal_header' => sub {
+    my %expect = (
+        'Channel No'         => 'channel_no',
+        'Receive Frequency'  => 'rx_freq',
+        'Transmit Frequency' => 'tx_freq',
+        'Offset Frequency'   => 'offset_freq',
+        'Offset Direction'   => 'offset_direction',
+        'Operating Mode'     => 'operating_mode',
+        'Dig / Analog'       => 'dig_analog',
+        'Name'               => 'name',
+        'User CTCSS'         => 'user_ctcss',
+        'RX-DG-ID'           => 'rx_dg_id',
+        'TX DG-ID'           => 'tx_dg_id',
+        'S-Meter SQL'        => 's_meter_sql',
+        'Bank: 1'            => 'bank_1',
+    );
+
+    my $c = CLASS->new;
+    is $c->internal_header($_), $expect{$_},
+        sprintf( "%-20s -> %s", $_, $expect{$_} )
+        for sort keys %expect;
+};
 
 done_testing;
