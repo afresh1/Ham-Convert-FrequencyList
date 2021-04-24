@@ -39,7 +39,24 @@ sub internal_header {
         lc;
     };
 
+    if ( exists $self->{_header}->{external}->{ $def->{internal} } ) {
+        my $external = $self->{_header}->{external}->{ $def->{internal} };
+        croak
+            "Multiple internal headers named $def->{internal}: $external, $name";
+    }
+
+    $self->{_header}->{external}->{ $def->{internal} } = $name;
+
     return $def->{internal};
+}
+
+sub external_header {
+    my ( $self, $name ) = @_;
+
+    return $self->{_header}->{external}->{$name}
+        if exists $self->{_header}->{external}->{$name};
+
+    croak "No external header mapping for '$name'";
 }
 
 sub column_defs {
@@ -130,6 +147,8 @@ Now C<$defs> could look like:
 
 Looks up the internal header name from the format specific name.
 
+Also caches the conversion to enable L</external_header> lookups.
+
 Does this normally by checking the L</column_defs> for a matching C<name>
 and returning the C<internal> version if it exists.
 Otherwise does some basic conversions to make the headers more
@@ -150,6 +169,14 @@ Currently the conversions are:
 =item Replace non-word characters to underscores.
 
 =back
+
+=head2 external_header
+
+    my $external_name = $converter->external_header( $internal_name );
+
+If the L</internal_name> has been calculated,
+looks up the external name from the cache.
+Otherwise throws an exception.
 
 =head1 BUGS AND LIMITATIONS
 
