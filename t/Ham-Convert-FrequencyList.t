@@ -67,7 +67,9 @@ subtest 'header map' => sub {
         "Looking up two headers that map to the same internal header dies";
 };
 
-is $converter->read( \*DATA ), [
+my $parsed = $converter->read( \*DATA );
+
+is $parsed, [
     {   'bar'     => 'B',
         'comment' => 'Repeater comment, with a comma',
         'ctcss'   => '167.9',
@@ -96,6 +98,17 @@ is $converter->read( \*DATA ), [
         'name'    => 'K7LJ',
     },
 ], "Parsed the data into the expected format";
+
+$converter->write( \my $output, $parsed );
+
+is $output =~ s/\r\n/\n/gmx, 3, "Output has windows newlines";
+
+is $output,
+    <<'EOL', "Wrote the CSV file we expected, with extra rows reordered";
+id,tx_freq,duplex,rx_freq,ctcss,dtcsc,dtcsp,mode,name,comment,groups,bar,foo
+1,440.300000,+,5.000000,167.9,023,NN,FM,KC7MZM,"Repeater comment, with a comma",1:1::1,B,A
+9,145.230000,-,0.600000,,023,NN,FM,K7LJ,"Sample repeater in Portland",::1::1,Y,X
+EOL
 
 done_testing;
 __DATA__

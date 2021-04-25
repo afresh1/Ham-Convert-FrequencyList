@@ -93,6 +93,49 @@ sub read {
     return \@list;
 }
 
+sub write {
+    my ( $self, $file, $list ) = @_;
+
+    my @headers = do {
+        my %headers = map { $_ => 1 } map { keys %{ $_ || {} } } @{$list};
+
+        my %seen;
+        grep    { !$seen{$_}++ } $self->headers,
+            map { $self->external_header($_) }
+            sort keys %headers;
+    };
+
+    # Can't use csv() here because there's no way to disable
+    # printing headers _and_ using hashrefs.
+    my $csv = Text::CSV->new( { eol => "\r\n" } );
+    $csv->column_names(@headers);
+
+    # eww, am I right?  but who wants to reproduce that logic?
+    my $fh = $csv->can('_csv_attr')->( { in => [], out => $file } )->{fh};
+
+    $csv->print( $fh, \@headers );
+
+    my $id = 1;
+    foreach my $item ( @{$list} ) {
+        my %copy = ( id => $id++ );
+
+        # Don't store empty rows
+        next unless first {length} values %{$item};
+
+        foreach my $name ( keys %{$item} ) {
+            if ( my $filter = $self->filter_for( out => $name ) ) {
+                local $_ = $item->{$name};
+                $copy{$name} = $filter->($item);
+            }
+            else {
+                $copy{$name} = $item->{$name};
+            }
+        }
+
+        $csv->print_hr( $fh, \%copy );
+    }
+}
+
 sub column_defs {
     my @defs = map { { name => $_ } } qw<
         id
@@ -165,6 +208,12 @@ Reads an arrayref of frequencies from a valid argument to
 C<Text::CSV/in>.
 The frequencies returned are a list of hashrefs or undef,
 the hashrefs are keyed off the L</internal_header> name.
+
+=head2 write
+
+    Ham::Convert::FreqencyList->new->write( $file, \@list );
+
+Writes an arrayref of frequency definitions to the specified C<$file>.
 
 =head2 headers
 
