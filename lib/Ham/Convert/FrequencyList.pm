@@ -68,6 +68,7 @@ sub read {
     my $read = csv(
         {   in      => $file,
             headers => sub { $self->internal_header($_) },
+            %{ $self->read_csv_params },
         }
     );
 
@@ -96,31 +97,36 @@ sub read {
 sub write {
     my ( $self, $file, $list ) = @_;
 
-    my @headers = do {
-        my %headers = map { $_ => 1 } map { keys %{ $_ || {} } } @{$list};
+    my @headers = $self->headers;
+    if ( $self->write_all_columns ) {
+        @headers = do {
+            my %headers = map { $_ => 1 } map { keys %{ $_ || {} } } @{$list};
 
-        my %seen;
-        grep    { !$seen{$_}++ } $self->headers,
-            map { $self->external_header($_) }
-            sort keys %headers;
-    };
+            my %seen;
+            grep    { !$seen{$_}++ } @headers,
+                map { $self->external_header($_) }
+                sort keys %headers;
+        };
+    }
 
     # Can't use csv() here because there's no way to disable
     # printing headers _and_ using hashrefs.
-    my $csv = Text::CSV->new( { eol => "\r\n" } );
-    $csv->column_names(@headers);
+    my $csv = Text::CSV->new( $self->write_csv_params );
+    $csv->column_names( map { $self->internal_header($_) } @headers );
 
     # eww, am I right?  but who wants to reproduce that logic?
     my $fh = $csv->can('_csv_attr')->( { in => [], out => $file } )->{fh};
 
-    $csv->print( $fh, \@headers );
+    $csv->print( $fh, \@headers ) if $self->write_headers;
 
     my $id = 1;
     foreach my $item ( @{$list} ) {
         my %copy = ( id => $id++ );
 
         # Don't store empty rows
-        next unless first {length} values %{$item};
+        next
+            unless $self->write_empty_rows
+            or first {length} values %{$item};
 
         foreach my $name ( keys %{$item} ) {
             if ( my $filter = $self->filter_for( out => $name ) ) {
@@ -168,10 +174,16 @@ sub filter_for {
 
     return $self->{_filter}->{$direction}->{$name} //= do {
         my $def = first { $self->internal_header( $_->{name} ) eq $name }
-            $self->column_defs;
+        $self->column_defs;
         $def ? $def->{$direction} : "";
     };
 }
+
+sub read_csv_params    { {} }
+sub write_csv_params   { return { eol => "\r\n" } }
+sub write_headers      {1}
+sub write_all_columns  { $_[0]->write_headers }
+sub write_empty_rows   {0}
 
 1;
 __END__
@@ -245,6 +257,35 @@ Now C<$defs> could look like:
 
 The C<in> filter is used by L</read> to convert to the internal
 conversion format.
+
+=head2 read_csv_params
+
+A hashref of additional parameters to be passed to the L<Text::CSV/csv>
+call.
+
+=head2 write_csv_params
+
+This allows subclasses to adjust the parameters passed to
+L<Text::CSV/new> to control the output of the file.
+
+The default is C<< eol => "\r\n" >>.
+
+=head2 write_headers
+
+This boolean indicates whether we should write out the header line
+in the CSV file.
+
+=head2 write_all_columns
+
+This is a boolean that indicates whether this file type supports
+extra columns or whether they are ignored.
+
+Defaults to the value of L</write_headers>.
+
+=head2 write_empty_rows
+
+A boolean value that indicates whether the empty rows should be
+included when writing.
 
 =head2 internal_header
 
