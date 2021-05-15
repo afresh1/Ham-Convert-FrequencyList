@@ -7,6 +7,7 @@ recommends 'Text::CSV_XS';
 
 on test => sub {
 	requires 'Test2::V0';
+	requires 'Test2::IPC';
 };
 
 on 'develop' => sub {
