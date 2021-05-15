@@ -50,6 +50,9 @@ subtest 'header map' => sub {
         qr/^\QNo external header mapping for 'Receive Frequency' at /,
         "Looking up external_header dies before initialization";
 
+    is $c->external_header('rx_freq'), 'rx_freq',
+        "Can look up the default external headers before loading a CSV";
+
     is $c->internal_header($_), $expect{$_},
         sprintf( "internal_header: %-20s -> %s", $_, $expect{$_} )
         for sort keys %expect;

@@ -53,8 +53,17 @@ sub internal_header {
 sub external_header {
     my ( $self, $name ) = @_;
 
-    return $self->{_header}->{external}->{$name}
-        if exists $self->{_header}->{external}->{$name};
+    # Initialize the cache if we haven't got one.
+    unless ( $self->{_header}->{default} ) {
+        local $self->{_header}->{external}; # don't overwite
+        $self->{_header}->{default}
+            = { map { $self->internal_header($_) => $_ } $self->headers };
+    }
+
+    foreach my $map (qw< external default > ) {
+        return $self->{_header}->{$map}->{$name}
+            if exists $self->{_header}->{$map}->{$name};
+    }
 
     croak "No external header mapping for '$name'";
 }
