@@ -107,7 +107,7 @@ sub read_csv_params {
     $params->{filter}->{id} = sub {
         return 1 if $checked_headers;
         $checked_headers = 1;
-        return if $_ eq [ $self->headers ]->[0];
+        return $_ ne [ $self->headers ]->[0];
     };
 
     return $params;
