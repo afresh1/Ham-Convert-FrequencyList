@@ -194,7 +194,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Provides converterters between different formats of frequency lists
+Provides converters between different formats of frequency lists
 commonly used to program frequencies into amateur radio equipment.
 Different radios use different software to program them,
 sometimes just by preference.
