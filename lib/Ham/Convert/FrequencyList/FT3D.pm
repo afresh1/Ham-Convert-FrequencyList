@@ -167,6 +167,19 @@ format used by L<Ham::Convert::FrequencyList>.
 
 Adjusts for the fact that the C<terminator> is always "0".
 
+=head2 read_csv_params
+
+Sets the headers to use the internal list, not what we read in.
+This format is very specific for what it will accept.
+
+=head2 write_headers
+
+Disables writing headers.
+
+=head2 write_empty_rows
+
+Enables writing empty rows.
+
 =head1 BUGS AND LIMITATIONS
 
 Likely a lot.
