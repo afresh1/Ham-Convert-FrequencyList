@@ -43,7 +43,7 @@ sub write {
     for my $i ( 0 .. 899 ) {
         my %item = ( terminator => 0, %{ $list->[$i] || {} } );
 
-        if ( first { length } values %{ $list->[$i] || {} } ) {
+        unless ( $self->is_empty_row( $list->[$i] ) ) {
             my $group = delete $item{group} || [];
             $item{"bank_$_"} = $group->[ $_ - 1 ] || 'OFF' for 1 .. 24;
         }
@@ -94,6 +94,12 @@ sub column_defs {
     return @defs;
 }
 
+sub is_empty_row {
+    my ( $self, $item ) = @_;
+    local $item->{terminator} if $item;
+    return $self->next::method($item);
+}
+
 sub read_csv_params {
     my $self   = shift;
     my $params = $self->next::method(@_);
@@ -141,6 +147,10 @@ These methods are used by subclasses to set up conversions.
 
 Includes custom definitions for converting to and from the standard
 format used by L<Ham::Convert::FrequencyList>.
+
+=head2 is_empty_row
+
+Adjusts for the fact that the C<terminator> is always "0".
 
 =head1 BUGS AND LIMITATIONS
 

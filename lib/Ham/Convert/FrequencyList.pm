@@ -87,7 +87,7 @@ sub read {
         $i = $id;
 
         # Don't store empty rows
-        next unless first {length} values %{$item};
+        next if $self->is_empty_row($item);
 
         foreach my $name ( keys %{$item} ) {
             if ( my $filter = $self->filter_for( in => $name ) ) {
@@ -132,9 +132,7 @@ sub write {
         my %copy = ( id => $id++ );
 
         # Don't store empty rows
-        next
-            unless $self->write_empty_rows
-            or first {length} values %{$item};
+        next unless $self->write_empty_rows or not $self->is_empty_row($item);
 
         foreach my $name ( keys %{$item} ) {
             if ( my $filter = $self->filter_for( out => $name ) ) {
@@ -175,6 +173,12 @@ sub column_defs {
     };
 
     return @defs;
+}
+
+sub is_empty_row {
+    my ( $self, $item ) = @_;
+    my $key = first {length $item->{$_} } keys %{$item};
+    return not $key;
 }
 
 sub filter_for {
@@ -265,6 +269,12 @@ Now C<$defs> could look like:
 
 The C<in> filter is used by L</read> to convert to the internal
 conversion format.
+
+=head2 is_empty_row
+
+   do_something($row) unless $converter->is_empty_row($row);
+
+Takes a parsed row hashref  and returns truthy if it is an "empty" row.
 
 =head2 read_csv_params
 

@@ -86,7 +86,21 @@ is $parsed, [
         'mode'    => 'FM',
         'name'    => 'KC7MZM',
     },
-    undef, undef, undef, undef, undef, undef, undef,
+    undef,
+    {   'bar'     => undef,
+        'comment' => '',
+        'ctcss'   => '',
+        'dtcsc'   => '',
+        'dtcsp'   => '',
+        'foo'     => undef,
+        'tx_freq' => '',
+        'rx_freq' => '',
+        'duplex'  => '',
+        'groups'  => [],
+        'mode'    => '',
+        'name'    => '0',
+    },
+    undef, undef, undef, undef, undef,
     {   'bar'     => 'Y',
         'comment' => 'Sample repeater in Portland',
         'ctcss'   => '',
@@ -104,12 +118,13 @@ is $parsed, [
 
 $converter->write( \my $output, $parsed );
 
-is $output =~ s/\r\n/\n/gmx, 3, "Output has windows newlines";
+is $output =~ s/\r\n/\n/gmx, 4, "Output has windows newlines";
 
 is $output,
     <<'EOL', "Wrote the CSV file we expected, with extra rows reordered";
 id,tx_freq,duplex,rx_freq,ctcss,dtcsc,dtcsp,mode,name,comment,groups,bar,foo
 1,440.300000,+,5.000000,167.9,023,NN,FM,KC7MZM,"Repeater comment, with a comma",1:1::1,B,A
+3,,,,,,,,0,,,,
 9,145.230000,-,0.600000,,023,NN,FM,K7LJ,Sample repeater in Portland,::1::1,Y,X
 EOL
 
