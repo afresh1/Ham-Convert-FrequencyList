@@ -63,7 +63,7 @@ subtest 'header map' => sub {
         "Looking up uninitialized external_header still dies";
 
     like dies { $c->internal_header('RX Freq') },
-        qr/^\QMultiple internal headers named rx_freq: Receive Frequency, RX Freq at /,
+        qr/^\QMultiple headers for rx_freq: Receive Frequency, RX Freq at /,
         "Looking up two headers that map to the same internal header dies";
 };
 

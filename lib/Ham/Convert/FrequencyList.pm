@@ -42,8 +42,7 @@ sub internal_header {
 
     if ( exists $self->{_header}->{external}->{ $def->{internal} } ) {
         my $external = $self->{_header}->{external}->{ $def->{internal} };
-        croak
-            "Multiple internal headers named $def->{internal}: $external, $name";
+        croak "Multiple headers for $def->{internal}: $external, $name";
     }
 
     $self->{_header}->{external}->{ $def->{internal} } = $name;
