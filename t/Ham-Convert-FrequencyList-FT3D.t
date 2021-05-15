@@ -214,6 +214,13 @@ my @expect = (
 );
 is [ split /\r\n/, $output ], \@expect, "Wrote the CSV file we expected";
 
+$output = '';
+$converter->write( \$output, [] );
+is [ split /\r\n/, $output ], [
+    '1,ON,145,145,0.6,OFF,ON,FM,AMS,ON,,OFF,100.0 Hz,23,RX Normal TX Normal,1600 Hz,RX 00,TX 00,High (5W),OFF,ON,20.0KHz,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,,0',
+    map {"$_,$empty"} 2 .. 900,
+], "An empty list still writes the default first row";
+
 done_testing;
 
 __DATA__

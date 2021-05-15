@@ -34,8 +34,15 @@ sub read {
     return $list;
 }
 
+# This is the required first row in file
+#'1,ON,145,145,0.6,OFF,ON,FM,AMS,ON,,OFF,100.0 Hz,23,RX Normal TX Normal,1600 Hz,RX 00,TX 00,High (5W),OFF,ON,20.0KHz,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,,0'
+
 sub write {
     my ( $self, $file, $list ) = @_;
+
+    my %defaults
+        = map { $self->internal_header( $_->{name} ) => $_->{default} }
+        $self->column_defs;
 
     # The printed list is required to have 900 rows
     # and have the terminator on it.
@@ -45,10 +52,16 @@ sub write {
 
         unless ( $self->is_empty_row( $list->[$i] ) ) {
             my $group = delete $item{group} || [];
-            $item{"bank_$_"} = $group->[ $_ - 1 ] || 'OFF' for 1 .. 24;
+            $item{"bank_$_"} = $group->[ $_ - 1 ] // $defaults{"bank_$_"}
+                for 1 .. 24;
         }
 
         push @list, \%item;
+    }
+
+    if ( $self->is_empty_row( $list[0] ) ) {
+        $list[0] = {%defaults};
+        delete $list[0]{id};
     }
 
     return $self->next::method( $file, \@list );
@@ -56,40 +69,42 @@ sub write {
 
 sub column_defs {
     my @defs = (
-        { name => 'Channel No', internal => 'id' },
-        { name => 'Priority Ch' },
-        { name => 'Receive Frequency' },
-        { name => 'Transmit Frequency' },
-        { name => 'Offset Frequency' },
-        { name => 'Offset Direction' },
-        { name => 'Auto Mode' },
-        { name => 'Operating Mode' },
-        { name => 'Dig/Analog' },
-        { name => 'Tag' },
-        { name => 'Name' },
-        { name => 'Tone Mode' },
-        { name => 'CTCSS Frequency' },
-        { name => 'DCS Code' },
-        { name => 'DCS Polarity' },
-        { name => 'User CTCSS' },
-        { name => 'RX DG-ID' },
-        { name => 'TX DG-ID' },
-        { name => 'TX Power' },
-        { name => 'Skip' },
-        { name => 'Auto Step' },
-        { name => 'Step' },
-        { name => 'Memory Mask' },
-        { name => 'ATT' },
-        { name => 'S-Meter SQL' },
-        { name => 'Bell' },
-        { name => 'Narrow' },
-        { name => 'Clock Shift' },
+        { name => 'Channel No',         internal => 'id' },
+        { name => 'Priority Ch',        default => 'ON' },
+        { name => 'Receive Frequency',  default => 145 },
+        { name => 'Transmit Frequency', default => 145 },
+        { name => 'Offset Frequency',   default => '0.6' },
+        { name => 'Offset Direction',   default => 'OFF' },
+        { name => 'Auto Mode',          default => 'ON' },
+        { name => 'Operating Mode',     default => 'FM' },
+        { name => 'Dig/Analog',         default => 'AMS' },
+        { name => 'Tag',                default => 'ON' },
+        { name => 'Name',               default => '' },
+        { name => 'Tone Mode',          default => 'OFF' },
+        { name => 'CTCSS Frequency',    default => '100.0 Hz', },
+        { name => 'DCS Code',           default => 23 },
+        { name => 'DCS Polarity',       default => 'RX Normal TX Normal' },
+        { name => 'User CTCSS',         default => '1600 Hz' },
+        { name => 'RX DG-ID',           default => 'RX 00' },
+        { name => 'TX DG-ID',           default => 'TX 00' },
+        { name => 'TX Power',           default => 'High (5W)' },
+        { name => 'Skip',               default => 'OFF' },
+        { name => 'Auto Step',          default => 'ON' },
+        { name => 'Step',               default => '20.0KHz' },
+        { name => 'Memory Mask',        default => 'OFF' },
+        { name => 'ATT',                default => 'OFF' },
+        { name => 'S-Meter SQL',        default => 'OFF' },
+        { name => 'Bell',               default => 'OFF' },
+        { name => 'Narrow',             default => 'OFF' },
+        { name => 'Clock Shift',        default => 'OFF' },
     );
 
-    push @defs, map { { name => "Bank $_" } } 1 .. 24;
+    push @defs, map { { name => "Bank $_", default => 'OFF' } } 1 .. 24;
 
-    push @defs,
-        ( { name => 'Comment' }, { name => '', internal => 'terminator' }, );
+    push @defs, (
+        { name => 'Comment' },
+        { name => '', internal => 'terminator', default => 0 },
+    );
 
     return @defs;
 }
