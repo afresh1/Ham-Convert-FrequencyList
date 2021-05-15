@@ -191,13 +191,13 @@ $converter->write( \my $output, $parsed );
 # This is the exact same, but column 2 is quoted
 my @expect = (
     'Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPolarity,Mode,TStep,Skip,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE',
-    '1,"MC 1",146.84,-,0.6,,88.5,88.5,23,NN,FM,5,,,,,,',
-    '2,"MC 2",147.28,+,0.6,Tone,167.9,88.5,23,NN,FM,5,,,,,,',
-    '4,"MC 4",146.48,,0.6,,88.5,88.5,23,NN,FM,5,,,,,,',
+    '1,MC 1,146.84,-,0.6,,88.5,88.5,23,NN,FM,5,,,,,,',
+    '2,MC 2,147.28,+,0.6,Tone,167.9,88.5,23,NN,FM,5,,,,,,',
+    '4,MC 4,146.48,,0.6,,88.5,88.5,23,NN,FM,5,,,,,,',
     '16,W7RAT,440.4,+,5,Tone,123,88.5,23,NN,FM,25,S,,,,,',
     '98,D1-2,146.84,-,0.6,,88.5,88.5,23,NN,FM,5,S,,,,,',
-    '99,"OEM 1",145.33,-,0.6,Tone,186.2,88.5,23,NN,FM,5,S,,,,,',
-    '100,"RED C1",146.98,-,0.6,DTCS,88.5,88.5,23,NN,FM,5,S,,,,,',
+    '99,OEM 1,145.33,-,0.6,Tone,186.2,88.5,23,NN,FM,5,S,,,,,',
+    '100,RED C1,146.98,-,0.6,DTCS,88.5,88.5,23,NN,FM,5,S,,,,,',
     '500,STD105,146.52,,0.6,,88.5,88.5,23,NN,FM,5,S,,,,,',
 );
 

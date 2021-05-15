@@ -180,7 +180,7 @@ sub filter_for {
 }
 
 sub read_csv_params    { {} }
-sub write_csv_params   { return { eol => "\r\n" } }
+sub write_csv_params   { return { eol => "\r\n", quote_space => 0 } }
 sub write_headers      {1}
 sub write_all_columns  { $_[0]->write_headers }
 sub write_empty_rows   {0}
@@ -268,7 +268,7 @@ call.
 This allows subclasses to adjust the parameters passed to
 L<Text::CSV/new> to control the output of the file.
 
-The default is C<< eol => "\r\n" >>.
+The default is C<< eol => "\r\n", quote_space => 0 >>.
 
 =head2 write_headers
 

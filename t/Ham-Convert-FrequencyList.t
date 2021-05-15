@@ -107,7 +107,7 @@ is $output,
     <<'EOL', "Wrote the CSV file we expected, with extra rows reordered";
 id,tx_freq,duplex,rx_freq,ctcss,dtcsc,dtcsp,mode,name,comment,groups,bar,foo
 1,440.300000,+,5.000000,167.9,023,NN,FM,KC7MZM,"Repeater comment, with a comma",1:1::1,B,A
-9,145.230000,-,0.600000,,023,NN,FM,K7LJ,"Sample repeater in Portland",::1::1,Y,X
+9,145.230000,-,0.600000,,023,NN,FM,K7LJ,Sample repeater in Portland,::1::1,Y,X
 EOL
 
 done_testing;
