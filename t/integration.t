@@ -28,6 +28,7 @@ sub slurp ($) { open my $fh, $_[0] || die $!; local $/; readline $fh }
 foreach my $src ( sort keys %tests ) {
     SKIP: foreach my $dst ( sort keys %{ $tests{$src} } ) {
         my ($in, $out) = @{ $tests{$src}{$dst} }{qw< in out >};
+        $in ||= $tests{$src}{$src}{in};    # allow a standard src file
 
         skip "Required integration files not there for '$src-$dst'", 1
             unless $in and $out;
