@@ -1,5 +1,5 @@
 use Test2::IPC;
-use Test2::V0 qw< ok is like skip try_ok diag done_testing >;
+use Test2::V0 qw< ok is like skip todo try_ok diag done_testing >;
 
 my $CLASS = 'Ham::Convert::FrequencyList';
 
@@ -8,16 +8,16 @@ my %tests;
     my $dir = __FILE__ =~ s/\.t$//r;
     opendir my $dh, $dir or die $!;
     for ( grep { !/^\./ && /\.csv$/i } readdir $dh ) {
-        my ($src, $dst, $direction) = split /[-\.]/;
+        my ($src, $dst, $direction, $todo) = split /[-\.]/;
         next unless $direction =~ /^(?:in|out)$/;
 
         # allow "$type-in-out.csv" or "out-in" for a round-trip
         if ( $dst =~ /^(?:in|out)$/ ) {
-            $tests{$src}{$src}{$dst}       = "$dir/$_";
-            $tests{$src}{$src}{$direction} = "$dir/$_";
+            $tests{$src}{$src}{$dst}       = { path => "$dir/$_", TODO => $todo };
+            $tests{$src}{$src}{$direction} = { path => "$dir/$_", TODO => $todo };
         }
         else {
-            $tests{$src}{$dst}{$direction} = "$dir/$_";
+            $tests{$src}{$dst}{$direction} = { path => "$dir/$_", TODO => $todo };
         }
     }
     closedir $dh;
@@ -44,13 +44,14 @@ foreach my $src ( sort keys %tests ) {
             ok eval "require $_", "Required $_ module [$@]" for values %c;
 
             my $parsed;
-            try_ok { $parsed = $c{src}->new->read($in) } "Read $in";
+            try_ok { $parsed = $c{src}->new->read($in->{path}) } "Read $in";
 
             my $got;
             try_ok { $c{dst}->new->write( \$got, $parsed ) } "Wrote $out";
 
-            is [ split /\r\n/, $got ], [ split /\r\n/, slurp($out) ],
-                "$src converted to $dst [$in -> $out]";
+            my $todo = todo("Not working yet") if $out->{TODO} && $out->{TODO} eq 'TODO';
+            is [ split /\r\n/, $got ], [ split /\r\n/, slurp($out->{path}) ],
+                "$src converted to $dst [$in->{path} -> $out->{path}]";
 
             exit;
         }
